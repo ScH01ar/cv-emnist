@@ -4,19 +4,28 @@ device: auto
 data:
   batch_size: 128
   val_ratio: 0.1
-  num_workers: 2
+  num_workers: 0
 
 model:
   file: models/mlp.py
   class_name: MLP
   kwargs:
     hidden_dims: [512, 256, 128]
+    activation: relu
+    norm: none
     dropout: 0.2
 
 train:
   run_name: mlp_baseline
   epochs: 10
-  lr: 0.001
-  optimizer: adam
-  weight_decay: 0.0
-  momentum: 0.9
+  optimizer:
+    name: adam
+    lr: 0.001
+    weight_decay: 0.0
+    momentum: 0.9
+  scheduler:
+    name: none
+  regularization:
+    type: none
+    l1_lambda: 0.0
+    l2_lambda: 0.0
