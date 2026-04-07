@@ -59,13 +59,9 @@ def main() -> None:
         model=model,
         train_loader=train_loader,
         val_loader=val_loader,
-        epochs=int(train_config.get("epochs", 20)),
-        lr=float(train_config.get("lr", 1e-3)),
         device=device,
         save_dir=run_dir,
-        optimizer_name=str(train_config.get("optimizer", "adam")),
-        weight_decay=float(train_config.get("weight_decay", 0.0)),
-        momentum=float(train_config.get("momentum", 0.9)),
+        train_config=train_config,
     )
     test_metrics = evaluate_model(model, test_loader, device=device)
     save_json(test_metrics, run_dir / "test_metrics.json")
