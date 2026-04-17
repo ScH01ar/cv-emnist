@@ -1,0 +1,28 @@
+seed: 42
+device: auto
+
+data:
+  batch_size: 128
+  val_ratio: 0.1
+  num_workers: 0
+
+model:
+  file: models/cnn.py
+  class_name: CNN
+  kwargs:
+    activation: relu
+    norm: batchnorm
+    dropout: 0.2
+
+train:
+  run_name: cnn_opt_sgd   # 换个名字，避免覆盖原来的日志
+  epochs: 15
+  optimizer:
+    name: sgd             # 从 adam 改成 sgd
+    lr: 0.01
+    momentum: 0.9
+  scheduler:
+    name: none
+  regularization:
+    type: l2
+    l2_lambda: 1e-4

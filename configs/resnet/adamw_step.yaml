@@ -1,0 +1,30 @@
+seed: 42
+device: auto
+
+data:
+  batch_size: 128
+  val_ratio: 0.1
+  num_workers: 0
+
+model:
+  file: models/resnet.py
+  class_name: MiniResNet
+  kwargs:
+    activation: relu
+    norm: batchnorm
+    dropout: 0.2
+
+train:
+  run_name: resnet_adamw_step
+  epochs: 15
+  optimizer:
+    name: adamw
+    lr: 0.001
+    weight_decay: 0.01
+  scheduler:
+    name: step
+    step_size: 5    # 每隔 5 个 epoch 调整一次
+    gamma: 0.1       # 学习率变为原来的 10%
+  regularization:
+    type: l2
+    l2_lambda: 0.0001
