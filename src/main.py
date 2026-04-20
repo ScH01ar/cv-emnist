@@ -45,6 +45,7 @@ def run_config(config: dict) -> dict:
         num_workers=int(data_config.get("num_workers", 2)),
         seed=seed,
         train_subset_ratio=float(data_config.get("train_subset_ratio", 1.0)),
+        augmentation_config=data_config.get("augmentation"),
     )
     device = get_device(str(config.get("device", "auto")))
     model = build_model(

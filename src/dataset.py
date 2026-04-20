@@ -21,15 +21,68 @@ BALANCED_FILES = [
 ]
 
 
-def build_transform() -> transforms.Compose:
-    return transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Lambda(lambda x: torch.rot90(x, -1, dims=[1, 2])),
-            transforms.Lambda(lambda x: torch.flip(x, dims=[1])),
-            transforms.Normalize((0.1307,), (0.3081,)),
-        ]
-    )
+class EMNISTOrientationCorrection:
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        tensor = torch.rot90(tensor, -1, dims=[1, 2])
+        return torch.flip(tensor, dims=[1])
+
+
+class GaussianNoise:
+    def __init__(self, std: float = 0.0) -> None:
+        self.std = float(std)
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        if self.std <= 0:
+            return tensor
+        noise = torch.randn_like(tensor) * self.std
+        return torch.clamp(tensor + noise, 0.0, 1.0)
+
+
+def resolve_augmentation_config(augmentation_config: dict | None) -> dict:
+    if augmentation_config is None:
+        augmentation_config = {}
+    if not isinstance(augmentation_config, dict):
+        raise ValueError("augmentation config must be a mapping when provided.")
+
+    translate = augmentation_config.get("translate", 0.0)
+    if isinstance(translate, (int, float)):
+        translate = (float(translate), float(translate))
+    else:
+        translate = tuple(float(value) for value in translate)
+        if len(translate) != 2:
+            raise ValueError("augmentation.translate must contain exactly two values.")
+
+    return {
+        "enabled": bool(augmentation_config.get("enabled", False)),
+        "rotation_deg": float(augmentation_config.get("rotation_deg", 0.0)),
+        "translate": translate,
+        "gaussian_noise_std": float(augmentation_config.get("gaussian_noise_std", 0.0)),
+    }
+
+
+def build_transform(train: bool = False, augmentation_config: dict | None = None) -> transforms.Compose:
+    resolved_augmentation = resolve_augmentation_config(augmentation_config)
+
+    transform_steps: list = [
+        transforms.ToTensor(),
+        EMNISTOrientationCorrection(),
+    ]
+
+    if train and resolved_augmentation["enabled"]:
+        if resolved_augmentation["rotation_deg"] > 0:
+            transform_steps.append(transforms.RandomRotation(resolved_augmentation["rotation_deg"]))
+        if any(value > 0 for value in resolved_augmentation["translate"]):
+            transform_steps.append(
+                transforms.RandomAffine(
+                    degrees=0,
+                    translate=resolved_augmentation["translate"],
+                )
+            )
+        if resolved_augmentation["gaussian_noise_std"] > 0:
+            transform_steps.append(GaussianNoise(resolved_augmentation["gaussian_noise_std"]))
+
+    transform_steps.append(transforms.Normalize((0.1307,), (0.3081,)))
+    return transforms.Compose(transform_steps)
 
 
 def _raw_files_ready() -> bool:
@@ -99,29 +152,45 @@ def build_dataloaders(
     num_workers: int = 2,
     seed: int = 42,
     train_subset_ratio: float = 1.0,
+    augmentation_config: dict | None = None,
 ):
     download_emnist()
 
-    transform = build_transform()
-    train_dataset = datasets.EMNIST(
+    train_transform = build_transform(train=True, augmentation_config=augmentation_config)
+    eval_transform = build_transform(train=False, augmentation_config=None)
+    train_source_dataset = datasets.EMNIST(
         root=str(TORCHVISION_ROOT),
         split="balanced",
         train=True,
         download=False,
-        transform=transform,
+        transform=train_transform,
     )
     test_dataset = datasets.EMNIST(
         root=str(TORCHVISION_ROOT),
         split="balanced",
         train=False,
         download=False,
-        transform=transform,
+        transform=eval_transform,
     )
 
-    val_size = max(1, int(len(train_dataset) * val_ratio))
-    train_size = len(train_dataset) - val_size
+    val_source_dataset = datasets.EMNIST(
+        root=str(TORCHVISION_ROOT),
+        split="balanced",
+        train=True,
+        download=False,
+        transform=eval_transform,
+    )
+
+    val_size = max(1, int(len(train_source_dataset) * val_ratio))
+    train_size = len(train_source_dataset) - val_size
     generator = torch.Generator().manual_seed(seed)
-    train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size], generator=generator)
+    train_dataset, val_dataset = random_split(
+        range(len(train_source_dataset)),
+        [train_size, val_size],
+        generator=generator,
+    )
+    train_dataset = Subset(train_source_dataset, train_dataset.indices)
+    val_dataset = Subset(val_source_dataset, val_dataset.indices)
     train_dataset = _subset_training_dataset(train_dataset, train_subset_ratio=train_subset_ratio, seed=seed)
 
     pin_memory = torch.cuda.is_available()
