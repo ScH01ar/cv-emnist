@@ -1,0 +1,29 @@
+seed: 42
+device: auto
+
+data:
+  batch_size: 128
+  val_ratio: 0.1
+  num_workers: 0
+
+model:
+  file: models/resnet.py
+  class_name: MiniResNet
+  kwargs:
+    activation: gelu
+    norm: batchnorm
+    dropout: 0.2
+
+train:
+  run_name: resnet_adamw_cosine_gelu_none
+  epochs: 15
+  optimizer:
+    name: adamw
+    lr: 0.001
+    weight_decay: 0.01
+  scheduler:
+    name: cosine
+    t_max: 15
+    min_lr: 0.000001
+  regularization:
+    type: none

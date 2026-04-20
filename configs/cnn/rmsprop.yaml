@@ -1,0 +1,27 @@
+seed: 42
+device: auto
+
+data:
+  batch_size: 128
+  val_ratio: 0.1
+  num_workers: 0
+
+model:
+  file: models/cnn.py
+  class_name: CNN
+  kwargs:
+    activation: relu
+    norm: batchnorm
+    dropout: 0.2
+
+train:
+  run_name: cnn_rmsprop
+  epochs: 15
+  optimizer:
+    name: rmsprop
+    lr: 0.001
+  scheduler:
+    name: none
+  regularization:
+    type: l2
+    l2_lambda: 1e-4
