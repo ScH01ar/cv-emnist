@@ -11,12 +11,12 @@ model:
   class_name: MLP
   kwargs:
     hidden_dims: [512, 256, 128]
-    activation: relu
+    activation: leaky_relu
     norm: none
     dropout: 0.2
 
 train:
-  run_name: mlp_baseline
+  run_name: mlp_activation_leaky_relu
   epochs: 30
   optimizer:
     name: adam

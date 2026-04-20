@@ -12,15 +12,15 @@ model:
   kwargs:
     hidden_dims: [512, 256, 128]
     activation: relu
-    norm: none
+    norm: batchnorm
     dropout: 0.2
 
 train:
-  run_name: mlp_baseline
+  run_name: mlp_stage2_optimizer_sgd
   epochs: 30
   optimizer:
-    name: adam
-    lr: 0.001
+    name: sgd
+    lr: 0.01
     weight_decay: 0.0
     momentum: 0.9
   scheduler:

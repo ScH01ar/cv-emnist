@@ -12,11 +12,11 @@ model:
   kwargs:
     hidden_dims: [512, 256, 128]
     activation: relu
-    norm: none
+    norm: batchnorm
     dropout: 0.2
 
 train:
-  run_name: mlp_baseline
+  run_name: mlp_stage2_regularization_l1
   epochs: 30
   optimizer:
     name: adam
@@ -26,6 +26,6 @@ train:
   scheduler:
     name: step
   regularization:
-    type: none
-    l1_lambda: 0.0
+    type: l1
+    l1_lambda: 0.000001
     l2_lambda: 0.0

@@ -16,11 +16,11 @@ model:
     dropout: 0.2
 
 train:
-  run_name: mlp_baseline
+  run_name: mlp_optimizer_sgd
   epochs: 30
   optimizer:
-    name: adam
-    lr: 0.001
+    name: sgd
+    lr: 0.01
     weight_decay: 0.0
     momentum: 0.9
   scheduler:

@@ -11,12 +11,12 @@ model:
   class_name: MLP
   kwargs:
     hidden_dims: [512, 256, 128]
-    activation: relu
-    norm: none
+    activation: elu
+    norm: batchnorm
     dropout: 0.2
 
 train:
-  run_name: mlp_baseline
+  run_name: mlp_stage3_activation_elu
   epochs: 30
   optimizer:
     name: adam
@@ -24,7 +24,10 @@ train:
     weight_decay: 0.0
     momentum: 0.9
   scheduler:
-    name: step
+    name: plateau
+    patience: 2
+    factor: 0.5
+    min_lr: 0.000001
   regularization:
     type: none
     l1_lambda: 0.0
