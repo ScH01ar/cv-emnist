@@ -8,6 +8,7 @@ EMNIST Balanced 项目骨架。
 - `configs/`：各模型的训练配置
 - `src/`：公共代码
 - `runs/`：训练输出
+- `artifacts/`：最终保留的最佳实验结果
 
 当前公共部分：
 
@@ -15,6 +16,7 @@ EMNIST Balanced 项目骨架。
 - `src/trainer.py`：训练策略、优化器、学习率调度、正则化
 - `src/utils.py`：通用工具函数
 - `src/main.py`：统一训练入口
+- `src/run_small_data.py`：小样本实验批量入口
 
 当前已支持的训练策略：
 
@@ -101,8 +103,118 @@ runs/<run_name>/
 - 公共代码改动先沟通
 - 模型代码和配置优先各自维护，避免互相覆盖
 
+## 公共实验
+
+当前需要统一处理的公共实验有：
+
+1. 小样本实验
+2. 鲁棒性实验
+3. 可解释性分析
+
+说明：
+
+- 统一测试评估、混淆矩阵、预测样本展示、最终绘图，后续统一在 `.ipynb` 中整理
+- 这里优先实现需要单独跑实验的公共部分
+
+### 1. 小样本实验
+
+状态：已实现
+
+目的：
+
+- 使用各模型的最优配置，分别跑 `30% / 50% / 100%` 训练数据
+- 比较不同数据规模下的性能变化
+
+基本操作：
+
+```bash
+python src/run_small_data.py --config configs/xxx/xxx_best.yaml
+```
+
+例如：
+
+```bash
+python src/run_small_data.py --config configs/mlp/stage3_regularization_l1.yaml
+```
+
+默认会生成三组实验：
+
+- `xxx_small_30`
+- `xxx_small_50`
+- `xxx_small_100`
+
+并额外输出一份汇总结果：
+
+```text
+runs/<base_run_name>_small_data_summary.json
+```
+
+### 2. 鲁棒性实验
+
+状态：未实现
+
+目的：
+
+- 在测试集上加入旋转、高斯噪声、模糊等扰动
+- 比较四个模型在扰动条件下的性能下降情况
+
+基本操作：
+
+### 3. 可解释性分析
+
+状态：未实现
+
+目的：
+
+- `CNN / ResNet`：Grad-CAM 或 feature maps
+- `ViT`：attention heatmap
+
+基本操作：
+
+## 最佳 Run 收集
+
+每个人在确定自己模型的最优配置后，不要提交整个 `runs/`，只需要把该模型的最优 `run` 目录内容复制到：
+
+```text
+artifacts/best_runs/<model>/
+```
+
+例如：
+
+- `artifacts/best_runs/mlp/`
+- `artifacts/best_runs/cnn/`
+- `artifacts/best_runs/resnet/`
+- `artifacts/best_runs/vit/`
+
+目录中至少需要包含：
+
+- `best.pt`
+- `history.json`
+- `summary.json`
+- `test_metrics.json`
+
+例如把某个最优实验结果复制到 `cnn` 目录：
+
+```bash
+mkdir -p artifacts/best_runs/cnn
+cp runs/cnn_best_run/best.pt artifacts/best_runs/cnn/
+cp runs/cnn_best_run/history.json artifacts/best_runs/cnn/
+cp runs/cnn_best_run/summary.json artifacts/best_runs/cnn/
+cp runs/cnn_best_run/test_metrics.json artifacts/best_runs/cnn/
+```
+
+这样后续统一做：
+
+- 曲线绘制
+- 结果汇总
+- notebook 整理
+- 鲁棒性实验
+- 可解释性分析
+
+都会更方便。
+
 ## TODO
 
-- 目前只完成了模型训练阶段的公共代码
-- 补模型间对比实验相关模块
-- 补更完整的评测与结果整理流程
+- 补鲁棒性实验公共模块
+- 补可解释性分析公共模块
+- 在 notebook 中统一整理测试评估、绘图和结果展示
