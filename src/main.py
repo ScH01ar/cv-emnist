@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import inspect
+from pathlib import Path
 
 from dataset import build_dataloaders
 from trainer import evaluate_model, train_model
@@ -26,9 +27,11 @@ def build_model(model_file: str, class_name: str, model_kwargs: dict, num_classe
     return model_class(**kwargs)
 
 
-def main() -> None:
-    args = parse_args()
-    config = load_yaml(args.config)
+def load_config(config_path: str | Path) -> dict:
+    return load_yaml(config_path)
+
+
+def run_config(config: dict) -> dict:
     seed = int(config.get("seed", 42))
     set_seed(seed)
 
@@ -41,6 +44,8 @@ def main() -> None:
         val_ratio=float(data_config.get("val_ratio", 0.1)),
         num_workers=int(data_config.get("num_workers", 2)),
         seed=seed,
+        train_subset_ratio=float(data_config.get("train_subset_ratio", 1.0)),
+        augmentation_config=data_config.get("augmentation"),
     )
     device = get_device(str(config.get("device", "auto")))
     model = build_model(
@@ -72,6 +77,17 @@ def main() -> None:
         f"best_val_acc={summary['best_val_accuracy']:.4f} | "
         f"test_acc={test_metrics['accuracy']:.4f}"
     )
+    return {
+        "run_name": run_name,
+        "summary": summary,
+        "test_metrics": test_metrics,
+    }
+
+
+def main() -> None:
+    args = parse_args()
+    config = load_config(args.config)
+    run_config(config)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import platform
+import resource
 from copy import deepcopy
 from pathlib import Path
 from time import perf_counter
@@ -204,6 +206,30 @@ def evaluate_model(model, data_loader, device: str = "cpu") -> dict:
         return run_epoch(model, data_loader, criterion=criterion, optimizer=None, device=device)
 
 
+def _reset_memory_stats(device: str) -> None:
+    if device.startswith("cuda") and torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats(device)
+
+
+def _get_cpu_peak_rss_mb() -> float:
+    usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    if platform.system() == "Darwin":
+        return usage / 1024 / 1024
+    return usage / 1024
+
+
+def _collect_memory_stats(device: str) -> dict:
+    memory = {
+        "cpu_peak_rss_mb": _get_cpu_peak_rss_mb(),
+        "gpu_peak_allocated_mb": None,
+        "gpu_peak_reserved_mb": None,
+    }
+    if device.startswith("cuda") and torch.cuda.is_available():
+        memory["gpu_peak_allocated_mb"] = torch.cuda.max_memory_allocated(device) / 1024 / 1024
+        memory["gpu_peak_reserved_mb"] = torch.cuda.max_memory_reserved(device) / 1024 / 1024
+    return memory
+
+
 def train_model(
     model,
     train_loader,
@@ -226,6 +252,7 @@ def train_model(
     best_val_accuracy = -1.0
     best_epoch = 0
     best_state = deepcopy(model.state_dict())
+    _reset_memory_stats(device)
     start_time = perf_counter()
 
     for epoch in range(1, epochs + 1):
@@ -272,6 +299,7 @@ def train_model(
 
     model.load_state_dict(best_state)
     duration = perf_counter() - start_time
+    memory = _collect_memory_stats(device)
 
     save_json({"history": history}, save_dir / "history.json")
     summary = {
@@ -283,6 +311,7 @@ def train_model(
         "regularization": regularization_config,
         "device": device,
         "training_seconds": duration,
+        "memory": memory,
     }
     save_json(summary, save_dir / "summary.json")
     return summary
