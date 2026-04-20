@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Subset, random_split
 from torchvision import datasets, transforms
 
 from utils import PROJECT_ROOT, ensure_dir
@@ -51,6 +51,8 @@ def _copy_or_extract(source_path: Path, target_path: Path) -> None:
         return
 
     shutil.copy2(source_path, target_path)
+
+
 def download_emnist(force_sync: bool = False) -> Path:
     if _raw_files_ready() and not force_sync:
         return EMNIST_RAW_DIR
@@ -79,11 +81,24 @@ def download_emnist(force_sync: bool = False) -> Path:
     return EMNIST_RAW_DIR
 
 
+def _subset_training_dataset(dataset, train_subset_ratio: float, seed: int):
+    if not 0 < train_subset_ratio <= 1.0:
+        raise ValueError(f"train_subset_ratio must be in (0, 1], got {train_subset_ratio}.")
+    if train_subset_ratio >= 1.0:
+        return dataset
+
+    subset_size = max(1, int(len(dataset) * train_subset_ratio))
+    generator = torch.Generator().manual_seed(seed)
+    indices = torch.randperm(len(dataset), generator=generator)[:subset_size].tolist()
+    return Subset(dataset, indices)
+
+
 def build_dataloaders(
     batch_size: int = 128,
     val_ratio: float = 0.1,
     num_workers: int = 2,
     seed: int = 42,
+    train_subset_ratio: float = 1.0,
 ):
     download_emnist()
 
@@ -107,6 +122,7 @@ def build_dataloaders(
     train_size = len(train_dataset) - val_size
     generator = torch.Generator().manual_seed(seed)
     train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size], generator=generator)
+    train_dataset = _subset_training_dataset(train_dataset, train_subset_ratio=train_subset_ratio, seed=seed)
 
     pin_memory = torch.cuda.is_available()
     train_loader = DataLoader(
