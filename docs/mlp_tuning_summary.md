@@ -49,6 +49,8 @@
 
 ## 5. 最终结果
 
+在完成前三轮调参后，我们又在当前最优配置基础上加入了数据增强，并重新训练进行比较。结果表明，加入适度的数据增强后，模型性能进一步提升，因此最终选择增强版作为 MLP 的最佳版本。
+
 最终，MLP 的最优配置为：
 
 - `hidden_dims = [512, 256, 128]`
@@ -59,14 +61,15 @@
 - `scheduler = plateau`
 - `regularization = l1`
 - `l1_lambda = 1e-5`
+- `augmentation = rotation + translate + gaussian noise`
 
 对应结果为：
 
 - baseline `test_accuracy = 86.52%`
-- `best_val_accuracy = 88.26%`
-- `test_accuracy = 87.63%`
+- `best_val_accuracy = 89.51%`
+- `test_accuracy = 88.65%`
 
-相比最初的 baseline，最终模型在测试集上的准确率提升了 `1.11` 个百分点。
+相比最初的 baseline，最终模型在测试集上的准确率提升了 `2.13` 个百分点。
 
 ## 6. 小结
 

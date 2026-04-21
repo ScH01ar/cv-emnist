@@ -4,7 +4,7 @@ device: auto
 data:
   batch_size: 128
   val_ratio: 0.1
-  num_workers: 0
+  num_workers: 4
   augmentation:
     enabled: true
     rotation_deg: 10
@@ -22,7 +22,7 @@ model:
 
 train:
   run_name: mlp_stage4_regularization_l1_aug
-  epochs: 30
+  epochs: 100
   optimizer:
     name: adam
     lr: 0.001
