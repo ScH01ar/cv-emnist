@@ -1,0 +1,33 @@
+{
+  "epochs": 15,
+  "best_epoch": 13,
+  "best_val_accuracy": 0.8952127659574468,
+  "optimizer": {
+    "name": "adam",
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "momentum": 0.9,
+    "alpha": 0.99,
+    "eps": 1e-08,
+    "rho": 0.9,
+    "lambd": 0.0001,
+    "t0": 1000000.0,
+    "nesterov": false
+  },
+  "scheduler": {
+    "name": "step",
+    "step_size": 5,
+    "gamma": 0.1,
+    "t_max": 15,
+    "patience": 3,
+    "factor": 0.5,
+    "min_lr": 0.0
+  },
+  "regularization": {
+    "type": "l2",
+    "l1_lambda": 0.0,
+    "l2_lambda": 0.0001
+  },
+  "device": "cpu",
+  "training_seconds": 563.8223544000066
+}

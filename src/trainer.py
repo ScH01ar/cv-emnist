@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import platform
-import resource
+if platform.system() != "Windows":
+    import resource
+else:
+    resource = None
 from copy import deepcopy
 from pathlib import Path
 from time import perf_counter
 
+import os
 import torch
 from torch import nn
 from torch.optim import lr_scheduler
@@ -212,7 +216,12 @@ def _reset_memory_stats(device: str) -> None:
 
 
 def _get_cpu_peak_rss_mb() -> float:
-    usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    if resource:
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    else:
+        # Windows 环境下使用 psutil 监控内存（需要 pip install psutil）
+        import psutil
+        usage = psutil.Process(os.getpid()).memory_info().rss / 1024  # 转换为 KB
     if platform.system() == "Darwin":
         return usage / 1024 / 1024
     return usage / 1024

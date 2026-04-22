@@ -64,5 +64,5 @@ def plot_history(run_names):
 
 if __name__ == "__main__":
     # 在这里填入你想对比的实验 run_name
-    runs_to_plot = ["cnn_baseline", "resnet_baseline"]
+    runs_to_plot = ["cnn_adam_step_gelu_l2_0.2", "resnet_adamw_cosine_gelu_l1_0.0"]
     plot_history(runs_to_plot)

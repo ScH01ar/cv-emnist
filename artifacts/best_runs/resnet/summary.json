@@ -1,0 +1,33 @@
+{
+  "epochs": 15,
+  "best_epoch": 14,
+  "best_val_accuracy": 0.9032801418439717,
+  "optimizer": {
+    "name": "adamw",
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "momentum": 0.9,
+    "alpha": 0.99,
+    "eps": 1e-08,
+    "rho": 0.9,
+    "lambd": 0.0001,
+    "t0": 1000000.0,
+    "nesterov": false
+  },
+  "scheduler": {
+    "name": "cosine",
+    "step_size": 10,
+    "gamma": 0.1,
+    "t_max": 15,
+    "patience": 3,
+    "factor": 0.5,
+    "min_lr": 1e-06
+  },
+  "regularization": {
+    "type": "l1",
+    "l1_lambda": 1e-05,
+    "l2_lambda": 0.0
+  },
+  "device": "cpu",
+  "training_seconds": 2183.0728745000088
+}
