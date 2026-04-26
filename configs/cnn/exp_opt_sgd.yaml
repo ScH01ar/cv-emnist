@@ -15,10 +15,10 @@ model:
     dropout: 0.2
 
 train:
-  run_name: cnn_opt_sgd   # 换个名字，避免覆盖原来的日志
+  run_name: cnn_opt_sgd   
   epochs: 15
   optimizer:
-    name: sgd             # 从 adam 改成 sgd
+    name: sgd             
     lr: 0.01
     momentum: 0.9
   scheduler:
