@@ -1,0 +1,41 @@
+seed: 42
+device: auto
+
+data:
+  batch_size: 128
+  val_ratio: 0.1
+  num_workers: 0
+
+model:
+  file: models/vit.py
+  class_name: ViT
+  kwargs:
+    image_size: 28
+    patch_size: 4
+    in_channels: 1
+    embed_dim: 128
+    depth: 6
+    num_heads: 4
+    mlp_ratio: 4.0
+    activation: gelu
+    norm: none
+    dropout: 0.1
+    attention_dropout: 0.0
+    classifier: cls
+
+train:
+  run_name: stage6_gelu_adamw_none_01_cosine_none
+  epochs: 30
+  optimizer:
+    name: adamw
+    lr: 0.001
+    weight_decay: 0.0001
+    momentum: 0.9
+  scheduler:
+    name: cosine
+    min_lr: 0.00001
+    t_max: 30
+  regularization:
+    type: none
+    l1_lambda: 0.0
+    l2_lambda: 0.0
