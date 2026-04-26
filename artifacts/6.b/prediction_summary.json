@@ -1,0 +1,24 @@
+{
+  "true_label_index": 41,
+  "true_label": "g",
+  "cnn": {
+    "label": "g",
+    "confidence": 0.9874106049537659,
+    "feature_channels": 64,
+    "feature_height": 14,
+    "feature_width": 14
+  },
+  "resnet": {
+    "label": "g",
+    "confidence": 0.9779638051986694,
+    "feature_channels": 64,
+    "feature_height": 14,
+    "feature_width": 14
+  },
+  "vit": {
+    "label": "g",
+    "confidence": 0.9782659411430359,
+    "patch_grid": 7,
+    "patch_size": 4
+  }
+}

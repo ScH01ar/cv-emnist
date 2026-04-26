@@ -1,0 +1,5 @@
+model_name,parameters
+MLP,573999
+CNN,834159
+ResNet,172239
+ViT,1201327
