@@ -1,65 +1,23 @@
 # cv-emnist
 
-EMNIST Balanced 项目骨架。
+EMNIST Balanced 字符图像分类项目。仓库包含四类模型的训练配置、公共训练框架、最佳模型结果、公共实验结果和最终 notebook。
 
 ## 代码说明
 
-- `models/`：模型结构
-- `configs/`：各模型的训练配置
-- `src/`：公共代码
-- `runs/`：训练输出
-- `artifacts/`：最终保留的最佳实验结果
-
-当前公共部分：
-
-- `src/dataset.py`：数据读取和 dataloader
-- `src/trainer.py`：训练策略、优化器、学习率调度、正则化
-- `src/utils.py`：通用工具函数
-- `src/main.py`：统一训练入口
-- `src/run_small_data.py`：小样本实验批量入口
-
-当前已支持的训练策略：
-
-1. 自适应学习率（Learning Rate Schedulers）
-   - `none`
-   - `step`
-   - `cosine`
-   - `plateau`
-   - `exponential`
-2. 激活函数（Activation Function）
-   - `relu`
-   - `leaky_relu`
-   - `elu`
-   - `gelu`
-   - `silu`
-3. 优化器（Optimizers）
-   - `sgd`
-   - `adam`
-   - `adamw`
-   - `rmsprop`
-   - `asgd`
-   - `adagrad`
-4. 归一化（Normalization）
-   - `none`
-   - `batchnorm`
-   - `layernorm`
-5. L1 与 L2 正则化（Regularization）
-   - `none`
-   - `l1`
-   - `l2`
-6. Dropout
-   - 在 `model.kwargs` 中配置 `dropout`
-   - `0.0` 表示不使用 Dropout
-   - 其他数值表示使用对应 Dropout rate
-
-其中 `optimizer / scheduler / regularization` 由公共 `trainer` 支持，`activation / normalization / dropout` 需要对应模型文件实现并在配置中传入。
-
-
-不要把数据读取、训练循环、结果保存这些公共逻辑重复写进各自模型文件里。模型相关修改尽量只放在 `models/` 和对应 `configs/` 中。
+- `models/`：模型结构，包括 `MLP / CNN / ResNet / ViT`
+- `configs/`：各模型训练配置和小样本实验配置
+- `src/`：公共代码，包括数据加载、训练入口、评估和公共实验脚本
+- `runs/`：本地训练输出目录，默认不作为最终结果提交
+- `artifacts/best_runs/`：四个模型的最佳权重、配置和训练日志
+- `artifacts/6.a/`：四个模型统一测试评估结果
+- `artifacts/6.b/`：可解释性分析结果
+- `artifacts/6_c/`：鲁棒性评估结果
+- `docs/`：各模型调参总结和公共实验分析文档
+- `Group_21.ipynb`：最终整理用 notebook
 
 ## 操作说明
 
-开始自己的开发前，先从 `main` 拉一个新分支：
+开始开发前建议从最新 `main` 拉分支：
 
 ```bash
 git checkout main
@@ -67,160 +25,82 @@ git pull
 git checkout -b your-branch-name
 ```
 
-成员日常开发流程：
-
-1. 在自己负责的 `models/*.py` 中写模型。
-2. 在对应的 `configs/*/` 下新建或修改配置文件。
-3. 模型结构相关参数写在 `model.kwargs`。
-4. 训练策略相关参数写在 `train` 里，例如 `optimizer / scheduler / regularization`。
-5. 用统一入口训练：
+训练单个配置：
 
 ```bash
-python src/main.py --config configs/xxx/xxx.yaml
+python src/main.py --config configs/mlp/baseline.yaml
 ```
 
-当前已经给了一份可运行的最简 baseline：
-
-- `models/mlp.py`
-- `configs/mlp/baseline.yaml`
-
-训练结果保存在：
+训练结果会保存在：
 
 ```text
 runs/<run_name>/
 ```
 
-默认输出：
+每个 run 默认包含：
 
 - `best.pt`
 - `history.json`
 - `summary.json`
 - `test_metrics.json`
 
-开发约定：
-
-- 不直接在 `main` 分支上开发
-- 公共代码改动先沟通
-- 模型代码和配置优先各自维护，避免互相覆盖
-
-
-## 最佳 Run 收集
-
-每个人在确定自己模型的最优配置后，不要提交整个 `runs/`，只需要把该模型的最优 `run` 目录内容复制到：
-
-```text
-artifacts/best_runs/<model>/
-```
-
-例如：
-
-- `artifacts/best_runs/mlp/`
-- `artifacts/best_runs/cnn/`
-- `artifacts/best_runs/resnet/`
-- `artifacts/best_runs/vit/`
-
-目录中至少需要包含：
-
-- `best.pt`
-- `history.json`
-- `summary.json`
-- `test_metrics.json`
-- 对应的最佳配置文件
-
-建议直接放一份：
-
-- `config.yaml`
-
-也可以把原始最佳配置复制过来并重命名为 `config.yaml`。
-
-例如把某个最优实验结果复制到 `cnn` 目录：
+小样本实验可以直接运行对应配置，例如：
 
 ```bash
-mkdir -p artifacts/best_runs/cnn
-cp runs/cnn_best_run/best.pt artifacts/best_runs/cnn/
-cp runs/cnn_best_run/history.json artifacts/best_runs/cnn/
-cp runs/cnn_best_run/summary.json artifacts/best_runs/cnn/
-cp runs/cnn_best_run/test_metrics.json artifacts/best_runs/cnn/
-cp configs/cnn/cnn_best.yaml artifacts/best_runs/cnn/config.yaml
+python src/main.py --config configs/mlp/small_30.yaml
+python src/main.py --config configs/cnn/small_30.yaml
+python src/main.py --config configs/resnet/small_30.yaml
 ```
 
-这样后续统一做：
+ViT 小样本实验使用批量入口：
 
-- 曲线绘制
-- 结果汇总
-- notebook 整理
-- 鲁棒性实验
-- 可解释性分析
+```bash
+python src/run_small_data.py --config configs/vit/small_base.yaml --ratios 0.3 0.5 1.0
+```
 
-都会更方便。
+## 最佳结果
+
+当前四个模型的最佳结果保存在 `artifacts/best_runs/<model>/`，每个目录包含：
+
+- `best.pt`
+- `config.yaml`
+- `history.json`
+- `summary.json`
+- `test_metrics.json`
+
+当前 best run 测试集准确率：
+
+| Model | Test Accuracy |
+|---|---:|
+| ResNet | 90.16% |
+| ViT | 89.30% |
+| CNN | 89.14% |
+| MLP | 88.65% |
+
+如果后续重新训练出更好的模型，只提交对应模型的 `artifacts/best_runs/<model>/`，不要提交完整 `runs/`。
 
 ## 公共实验
 
-按原始作业 PDF，目前公共实验主要对应以下部分：
+公共实验已经整理到脚本、`artifacts` 和 notebook 中：
 
-- `5.c`：最佳模型训练曲线与训练信息整理
-- `5.d`：小样本训练分析
-- `6.a`：四个模型测试集统一评估与对比
-- `6.b`：可解释性分析
-- `6.c`：鲁棒性评估
+- `5.c`：最佳模型训练曲线、训练时间和内存占用，展示在 `Group_21.ipynb`
+- `5.d`：小样本训练分析，展示在 `Group_21.ipynb`
+- `6.a`：统一测试集评估与模型比较，结果在 `artifacts/6.a/`
+- `6.b`：可解释性分析，结果在 `artifacts/6.b/`
+- `6.c`：鲁棒性评估，结果在 `artifacts/6_c/`
 
-说明：
+公共实验脚本：
 
-- 这些部分默认基于“每个模型已经确定了自己的最佳版本”这一前提来做
-- 每个模型在确定当前最优配置后，还需要在该配置基础上加入数据增强再训练一版，并比较增强前后的结果
-- 只有在比较完成后，表现更好的版本才作为该模型的最终最佳版本
-- 在开始公共实验之前，每个模型负责人都需要先把自己的最佳结果整理到 `artifacts/best_runs/<model>/`
-- 统一测试评估、混淆矩阵、预测样本展示、最终绘图，后续统一在 `.ipynb` 中整理
+```bash
+python src/6a_compare_best_runs.py
+python src/6b_interpretability_analysis.py
+python src/6c_robustness_evaluate.py --batch-size 512 --num-workers 0 --device auto
+```
 
-### 分工
+最终提交和展示主要看：
 
-当前三人分工如下：
-
-- `A`：负责 `5.c` 和 `5.d`
-- `B`：负责 `6.a` 和 `6.b`
-- `C`：负责 `6.c`
-
-**各部分相关代码自行实现，并更新至仓库**。本地跑完结果后将结果传至 `artifacts` 目录下，例 `artifacts/6_a/` 放置6.a相应的结果。
-
-### 3. `6.a` 测试集统一评估与对比
-
-状态：未实现
-
-目标：
-
-- 输出前 6 个测试样本预测结果
-- 绘制四个模型的混淆矩阵
-- 汇总 `accuracy / precision / recall / F1`
-- 分析 `CNN / ResNet / ViT / MLP` 的性能差异
-
-基本操作：
-
-### 4. `6.b` 可解释性分析
-
-状态：未实现
-
-目标：
-
-- `CNN / ResNet`：Grad-CAM 或 feature maps
-- `ViT`：attention heatmap
-
-基本操作：
-
-### 5. `6.c` 鲁棒性实验
-
-状态：未实现
-
-目标：
-
-- 在测试集上加入旋转、高斯噪声、模糊等扰动
-- 比较四个模型在扰动条件下的性能下降情况
-
-基本操作：
-
-
-## TODO
-
-- 补 `6.a` 测试集统一评估模块
-- 补 `6.b` 可解释性分析公共模块
-- 补 `6.c` 鲁棒性实验公共模块
-- 在 notebook 中统一整理 `5.c / 5.d / 6.a / 6.b / 6.c`
+- `Group_21.ipynb`
+- `artifacts/best_runs/`
+- `artifacts/6.a/`
+- `artifacts/6.b/`
+- `artifacts/6_c/`
